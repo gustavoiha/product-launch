@@ -1,6 +1,8 @@
 import { createApp } from 'vue';
 import type { App as VueApp } from 'vue';
 import App from './App.vue';
+import { configureAmplify } from './config/amplify';
+import { getEnvironmentConfig } from './config/environment';
 import { createAppRouter } from './router';
 import {
   authenticationStoreKey,
@@ -10,6 +12,8 @@ import { createWaitlistStore, waitlistStoreKey } from './state/waitlist';
 import './main.css';
 
 export const createApplication = (mountElement: HTMLElement): VueApp<Element> => {
+  configureAmplify(getEnvironmentConfig());
+
   const authenticationStore = createAuthenticationStore();
   const waitlistStore = createWaitlistStore();
   const router = createAppRouter(authenticationStore);

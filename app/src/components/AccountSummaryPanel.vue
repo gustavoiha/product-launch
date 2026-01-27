@@ -20,7 +20,12 @@ import { useAuthenticationStore } from '../state/authentication';
 
 const authenticationStore = useAuthenticationStore();
 
-const handleLogout = (): void => {
-  authenticationStore.logout();
+const handleLogout = async (): Promise<void> => {
+  try {
+    await authenticationStore.logout();
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unable to log out.';
+    console.error('Logout failed:', errorMessage);
+  }
 };
 </script>

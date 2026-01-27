@@ -12,6 +12,7 @@
     "lint": "eslint . --ext .ts,.vue"
   },
   "dependencies": {
+    "aws-amplify": "^6.6.4",
     "vue": "^3.4.31",
     "vue-router": "^4.4.3"
   },

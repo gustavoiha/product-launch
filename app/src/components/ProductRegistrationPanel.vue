@@ -110,6 +110,7 @@
       <p v-if="waitlistStore.waitlistSaved.value" class="success">
         Waitlist saved.
       </p>
+      <p v-if="saveError" class="error">{{ saveError }}</p>
     </form>
   </section>
 </template>
@@ -123,6 +124,7 @@ const waitlistStore = useWaitlistStore();
 const newFieldLabel = ref('');
 const newFieldType = ref<WaitlistFieldType>('text');
 const fieldError = ref('');
+const saveError = ref('');
 
 const addField = (): void => {
   fieldError.value = '';
@@ -139,7 +141,14 @@ const removeField = (fieldId: string): void => {
   waitlistStore.removeField(fieldId);
 };
 
-const saveWaitlist = (): void => {
-  waitlistStore.saveWaitlist();
+const saveWaitlist = async (): Promise<void> => {
+  saveError.value = '';
+  try {
+    await waitlistStore.saveWaitlist();
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unable to save.';
+    console.error('Failed to save waitlist:', errorMessage);
+    saveError.value = 'Unable to save waitlist right now.';
+  }
 };
 </script>

@@ -44,7 +44,8 @@ export const createAppRouter = (
     routes
   });
 
-  router.beforeEach((to) => {
+  router.beforeEach(async (to) => {
+    await authenticationStore.initialize();
     if (to.meta.requiresAuth && !authenticationStore.state.isAuthenticated) {
       return { name: 'login' };
     }

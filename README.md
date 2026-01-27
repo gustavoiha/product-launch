@@ -18,6 +18,16 @@ The user-facing application lets founders log in, register a product, build a cu
 2. `npm install`
 3. `npm run dev`
 
+## Environment configuration
+
+Set the following variables in an `.env` file inside `app/` to connect to AWS Cognito and API Gateway:
+
+* `VITE_AWS_REGION`
+* `VITE_USER_POOL_ID`
+* `VITE_USER_POOL_CLIENT_ID`
+* `VITE_API_GATEWAY_URL`
+* `VITE_API_GATEWAY_NAME`
+
 ## Verification
 
 * `npm run test`

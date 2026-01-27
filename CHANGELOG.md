@@ -2,4 +2,4 @@
 
 ## Unreleased
 
-- Refactored the Vue app into routed pages with reusable components and store-based state.
+- Integrated Amplify configuration, API client layer, and store-driven data fetching for Cognito and API Gateway.

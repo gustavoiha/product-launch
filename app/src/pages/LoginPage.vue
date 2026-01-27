@@ -27,11 +27,12 @@
       </div>
       <button class="primary" type="submit">Log in</button>
     </form>
+    <p v-if="loginError" class="error">{{ loginError }}</p>
   </section>
 </template>
 
 <script setup lang="ts">
-import { reactive } from 'vue';
+import { reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthenticationStore } from '../state/authentication';
 
@@ -42,6 +43,7 @@ interface LoginForm {
 
 const authenticationStore = useAuthenticationStore();
 const router = useRouter();
+const loginError = ref('');
 
 const loginForm = reactive<LoginForm>({
   email: '',
@@ -49,7 +51,14 @@ const loginForm = reactive<LoginForm>({
 });
 
 const handleLogin = async (): Promise<void> => {
-  authenticationStore.login(loginForm.email, loginForm.password);
-  await router.push({ name: 'dashboard' });
+  loginError.value = '';
+  try {
+    await authenticationStore.login(loginForm.email, loginForm.password);
+    await router.push({ name: 'dashboard' });
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Login failed.';
+    console.error('Login failed:', errorMessage);
+    loginError.value = 'Login failed. Check your credentials and try again.';
+  }
 };
 </script>

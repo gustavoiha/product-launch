@@ -7,6 +7,18 @@ import {
   type InjectionKey,
   type Ref
 } from 'vue';
+import {
+  fetchOwnerWaitlist,
+  fetchWaitlistBySlug,
+  fetchWaitlistEntries,
+  submitPublicEntry,
+  updateWaitlist
+} from '../api/waitlist';
+import type {
+  WaitlistEntryResponse,
+  WaitlistRecordResponse,
+  WaitlistSaveRequest
+} from '../api/waitlist';
 
 export type WaitlistFieldType = 'email' | 'text' | 'boolean';
 
@@ -50,8 +62,11 @@ export interface WaitlistStore {
   waitlistSlug: ComputedRef<string>;
   addField: (label: string, type: WaitlistFieldType) => boolean;
   removeField: (fieldId: string) => void;
-  saveWaitlist: () => void;
-  submitPublicJoin: () => void;
+  saveWaitlist: () => Promise<void>;
+  loadOwnerWaitlist: () => Promise<void>;
+  loadWaitlistBySlug: (slug: string) => Promise<void>;
+  loadWaitlistEntries: () => Promise<void>;
+  submitPublicJoin: () => Promise<void>;
   resetPublicJoin: () => void;
   setUrlCopied: (value: boolean) => void;
   getShareableUrl: (origin: string) => string;
@@ -69,11 +84,8 @@ const createSlug = (value: string): string => {
 };
 
 export const createWaitlistStore = (): WaitlistStore => {
-  let identifierCounter = 0;
-  const createIdentifier = (prefix: string): string => {
-    identifierCounter += 1;
-    return `${prefix}-${identifierCounter}`;
-  };
+  const waitlistId = ref('');
+  const activeWaitlistSlug = ref('');
 
   const waitlistConfig = reactive<WaitlistConfig>({
     title: 'Join the launch waitlist',
@@ -102,8 +114,32 @@ export const createWaitlistStore = (): WaitlistStore => {
   const publicJoinCompleted = ref(false);
 
   const waitlistSlug = computed<string>((): string => {
+    if (activeWaitlistSlug.value) {
+      return activeWaitlistSlug.value;
+    }
     return createSlug(waitlistConfig.title || waitlistConfig.productName);
   });
+
+  const ensurePublicFormValues = (fields: WaitlistField[]): void => {
+    fields.forEach((field): void => {
+      if (publicFormValues[field.id] === undefined) {
+        publicFormValues[field.id] = field.type === 'boolean' ? false : '';
+      }
+    });
+  };
+
+  const applyWaitlistRecord = (record: WaitlistRecordResponse): void => {
+    waitlistId.value = record.id;
+    activeWaitlistSlug.value = record.slug;
+    waitlistFields.value = record.fields;
+    waitlistConfig.productName = record.productName;
+    waitlistConfig.title = record.title;
+    waitlistConfig.description = record.description;
+    waitlistConfig.confirmationTitle = record.confirmationTitle;
+    waitlistConfig.confirmationDescription = record.confirmationDescription;
+    waitlistConfig.isActive = record.isActive;
+    ensurePublicFormValues(record.fields);
+  };
 
   const addField = (label: string, type: WaitlistFieldType): boolean => {
     const trimmedLabel = label.trim();
@@ -111,7 +147,7 @@ export const createWaitlistStore = (): WaitlistStore => {
       return false;
     }
 
-    const identifier = createIdentifier('field');
+    const identifier = `field-${Date.now()}`;
     waitlistFields.value = [
       ...waitlistFields.value,
       {
@@ -131,8 +167,50 @@ export const createWaitlistStore = (): WaitlistStore => {
     delete publicFormValues[fieldId];
   };
 
-  const saveWaitlist = (): void => {
+  const toSaveRequest = (): WaitlistSaveRequest => {
+    return {
+      productName: waitlistConfig.productName,
+      title: waitlistConfig.title,
+      description: waitlistConfig.description,
+      confirmationTitle: waitlistConfig.confirmationTitle,
+      confirmationDescription: waitlistConfig.confirmationDescription,
+      isActive: waitlistConfig.isActive,
+      fields: waitlistFields.value.map((field) => ({
+        label: field.label,
+        type: field.type
+      }))
+    };
+  };
+
+  const saveWaitlist = async (): Promise<void> => {
+    if (!waitlistId.value) {
+      const ownerWaitlist = await fetchOwnerWaitlist();
+      applyWaitlistRecord(ownerWaitlist);
+    }
+
+    const updated = await updateWaitlist(waitlistId.value, toSaveRequest());
+    applyWaitlistRecord(updated);
     waitlistSaved.value = true;
+  };
+
+  const loadOwnerWaitlist = async (): Promise<void> => {
+    const record = await fetchOwnerWaitlist();
+    applyWaitlistRecord(record);
+  };
+
+  const loadWaitlistBySlug = async (slug: string): Promise<void> => {
+    const record = await fetchWaitlistBySlug(slug);
+    applyWaitlistRecord(record);
+  };
+
+  const loadWaitlistEntries = async (): Promise<void> => {
+    if (!waitlistId.value) {
+      throw new Error('Waitlist ID is not available.');
+    }
+    const response = await fetchWaitlistEntries(waitlistId.value);
+    waitlistEntries.value = response.entries.map((entry) => {
+      return formatEntry(entry);
+    });
   };
 
   const formatEntryDetails = (
@@ -161,20 +239,30 @@ export const createWaitlistStore = (): WaitlistStore => {
     return typeof value === 'string' && value ? value : 'New response';
   };
 
-  const submitPublicJoin = (): void => {
+  const formatEntry = (entry: WaitlistEntryResponse): WaitlistEntry => {
+    return {
+      id: entry.id,
+      joinedAt: entry.joinedAt,
+      values: {
+        primary: getPrimaryValue(entry.values)
+      },
+      details: formatEntryDetails(entry.values)
+    };
+  };
+
+  const submitPublicJoin = async (): Promise<void> => {
+    const slug = activeWaitlistSlug.value || waitlistSlug.value;
+    if (!slug) {
+      throw new Error('Waitlist slug is not available.');
+    }
+
     const entryValues: Record<string, string | boolean> = {};
     waitlistFields.value.forEach((field): void => {
       entryValues[field.id] = publicFormValues[field.id];
     });
-    const entry: WaitlistEntry = {
-      id: createIdentifier('entry'),
-      joinedAt: new Date().toLocaleString(),
-      values: {
-        primary: getPrimaryValue(entryValues)
-      },
-      details: formatEntryDetails(entryValues)
-    };
-    waitlistEntries.value = [entry, ...waitlistEntries.value];
+
+    const entry = await submitPublicEntry(slug, { values: entryValues });
+    waitlistEntries.value = [formatEntry(entry), ...waitlistEntries.value];
     publicJoinCompleted.value = true;
   };
 
@@ -190,7 +278,7 @@ export const createWaitlistStore = (): WaitlistStore => {
   };
 
   const getShareableUrl = (origin: string): string => {
-    return `${origin}/#/${waitlistSlug.value}`;
+    return `${origin}/#/public/${waitlistSlug.value}`;
   };
 
   return {
@@ -205,6 +293,9 @@ export const createWaitlistStore = (): WaitlistStore => {
     addField,
     removeField,
     saveWaitlist,
+    loadOwnerWaitlist,
+    loadWaitlistBySlug,
+    loadWaitlistEntries,
     submitPublicJoin,
     resetPublicJoin,
     setUrlCopied,
