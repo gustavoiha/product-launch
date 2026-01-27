@@ -28,6 +28,20 @@ Set the following variables in an `.env` file inside `app/` to connect to AWS Co
 * `VITE_API_GATEWAY_URL`
 * `VITE_API_GATEWAY_NAME`
 
+## Infrastructure deployment
+
+The serverless backend lives in `infrastructure/` and is managed with AWS CDK. It provisions a DynamoDB table, API Gateway + Lambda REST endpoints, and Cognito authentication.
+
+1. `cd infrastructure`
+2. `npm install`
+3. `npm run test`
+4. `npm run typecheck`
+5. `npm run lint`
+6. `npx cdk bootstrap`
+7. `npx cdk deploy`
+
+Use the CDK outputs for `ApiGatewayUrl`, `ApiGatewayName`, `UserPoolId`, and `UserPoolClientId` to populate the frontend `.env` values listed above.
+
 ## Verification
 
 * `npm run test`
