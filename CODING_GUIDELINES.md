@@ -56,6 +56,10 @@ This project uses `Typescript` when possible, and defaults to `Javascript` if ne
 - When custom hooks are not enough, use higher-order components or render props.
 - Each .tsx file should exactly only one React component.
 
+## Vue.js
+
+- Use Composition API instead of Options API.
+
 ## External dependencies
 
 - When installing a library, try to find its latest version. Avoid using alpha or beta versions.
