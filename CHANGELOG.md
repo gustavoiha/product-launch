@@ -2,4 +2,4 @@
 
 ## Unreleased
 
-- Added the initial Vue 3 waitlist management application with login, waitlist configuration, public signup page, and entry tracking.
+- Refactored the Vue app into routed pages with reusable components and store-based state.
