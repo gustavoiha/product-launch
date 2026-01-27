@@ -23,6 +23,9 @@ test('api stack provisions API Gateway, Lambdas, and authorizer', () => {
   template.hasResourceProperties('AWS::ApiGateway::Authorizer', {
     Type: 'COGNITO_USER_POOLS'
   });
+  template.hasResourceProperties('AWS::Lambda::Function', Match.objectLike({
+    Runtime: Match.stringLikeRegexp('nodejs24')
+  }));
   template.hasResourceProperties('AWS::ApiGateway::Method', Match.objectLike({
     HttpMethod: 'GET'
   }));
