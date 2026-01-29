@@ -31,6 +31,7 @@ Set the following variables in an `.env` file inside `app/` to connect to AWS Co
 ## Infrastructure deployment
 
 The serverless backend lives in `infrastructure/` and is managed with AWS CDK. It provisions a DynamoDB table, API Gateway + Lambda REST endpoints, and Cognito authentication.
+The deployment stack provisions the frontend hosting bucket along with a CodePipeline + CodeBuild workflow that builds and deploys the `app` bundle.
 
 1. `cd infrastructure`
 2. `npm install`
@@ -41,6 +42,8 @@ The serverless backend lives in `infrastructure/` and is managed with AWS CDK. I
 7. `npx cdk deploy`
 
 Use the CDK outputs for `ApiGatewayUrl`, `ApiGatewayName`, `UserPoolId`, and `UserPoolClientId` to populate the frontend `.env` values listed above.
+Use the `FrontendBucketName` output when deploying the frontend locally from `app/scripts/deploy-frontend.sh`.
+Set the deployment stack configuration via CDK context values (`repositoryOwner`, `repositoryName`, `repositoryBranch`, `gitHubTokenSecretName`) or the environment variables `PIPELINE_REPOSITORY_OWNER`, `PIPELINE_REPOSITORY_NAME`, `PIPELINE_REPOSITORY_BRANCH`, and `PIPELINE_GITHUB_TOKEN_SECRET_NAME`.
 
 ## Verification
 
