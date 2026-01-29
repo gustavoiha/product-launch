@@ -2,6 +2,7 @@ import { App } from 'aws-cdk-lib';
 import { ApiStack } from '../lib/api-stack';
 import { AuthenticationStack } from '../lib/authentication-stack';
 import { DataStack } from '../lib/data-stack';
+import { DeploymentStack } from '../lib/deployment-stack';
 
 export const buildApp = (): App => {
   const app = new App();
@@ -25,7 +26,13 @@ export const buildApp = (): App => {
     userPool: authenticationStack.userPool
   });
 
+  new DeploymentStack(app, 'ProductLaunchDeploymentStack', {
+    env
+  });
+
   return app;
 };
 
-buildApp();
+if (require.main === module) {
+  buildApp();
+}

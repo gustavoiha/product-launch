@@ -8,7 +8,8 @@ test('cdk app wires the expected stacks', () => {
     expect.arrayContaining([
       'ProductLaunchAuthenticationStack',
       'ProductLaunchDataStack',
-      'ProductLaunchApiStack'
+      'ProductLaunchApiStack',
+      'ProductLaunchDeploymentStack'
     ])
   );
 });
