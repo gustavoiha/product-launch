@@ -18,6 +18,26 @@ The user-facing application lets founders log in, register a product, build a cu
 2. `npm install`
 3. `npm run dev`
 
+## Frontend build and deploy
+
+The `app/` package contains the Vue-based frontend for Product Launch. Use the commands below to build, preview, and deploy the frontend bundle.
+
+### Build
+
+1. `npm run build`
+2. `npm run preview`
+
+### Deploy to the frontend hosting bucket
+
+The deployment stack provisions the S3 bucket used to host the frontend. Capture the bucket name from the CDK outputs and export it locally before deploying.
+
+```bash
+export FRONTEND_BUCKET_NAME="your-frontend-bucket-name"
+./scripts/deploy-frontend.sh
+```
+
+The script installs dependencies, builds the app, and syncs the `dist/` folder to the hosting bucket. Ensure the AWS CLI is configured with credentials that can write to the bucket.
+
 ## Environment configuration
 
 Set the following variables in an `.env` file inside `app/` to connect to AWS Cognito and API Gateway:
