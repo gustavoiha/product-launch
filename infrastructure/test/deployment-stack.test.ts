@@ -4,12 +4,7 @@ import { DeploymentStack } from '../lib/deployment-stack';
 
 test('deployment stack provisions frontend bucket, pipeline, and build project', () => {
   const app = new App();
-  const stack = new DeploymentStack(app, 'DeploymentStackTest', {
-    repositoryOwner: 'example-owner',
-    repositoryName: 'example-repo',
-    branchName: 'main',
-    gitHubTokenSecretName: 'github-token-secret'
-  });
+  const stack = new DeploymentStack(app, 'DeploymentStackTest');
   const template = Template.fromStack(stack);
 
   template.resourceCountIs('AWS::S3::Bucket', 2);

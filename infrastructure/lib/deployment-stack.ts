@@ -3,14 +3,8 @@ import { BuildSpec, LinuxBuildImage, Project } from 'aws-cdk-lib/aws-codebuild';
 import { Pipeline, Artifact } from 'aws-cdk-lib/aws-codepipeline';
 import { CodeBuildAction, GitHubSourceAction, GitHubTrigger } from 'aws-cdk-lib/aws-codepipeline-actions';
 import { BlockPublicAccess, Bucket } from 'aws-cdk-lib/aws-s3';
+import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 import { Construct } from 'constructs';
-
-interface DeploymentStackProps extends StackProps {
-  repositoryOwner: string;
-  repositoryName: string;
-  branchName: string;
-  gitHubTokenSecretName: string;
-}
 
 const createFrontendBuildSpec = (): BuildSpec => {
   return BuildSpec.fromObject({
@@ -29,11 +23,21 @@ const createFrontendBuildSpec = (): BuildSpec => {
   });
 };
 
+const REPOSITORY_OWNER_PARAMETER_NAME = 'PIPELINE_REPOSITORY_OWNER';
+const REPOSITORY_NAME_PARAMETER_NAME = 'PIPELINE_REPOSITORY_NAME';
+const REPOSITORY_BRANCH_PARAMETER_NAME = 'PIPELINE_REPOSITORY_BRANCH';
+const GITHUB_TOKEN_PARAMETER_NAME = 'PIPELINE_GITHUB_TOKEN_SECRET_NAME';
+
 export class DeploymentStack extends Stack {
   public readonly frontendBucket: Bucket;
 
-  public constructor(scope: Construct, id: string, props: DeploymentStackProps) {
+  public constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
+
+    const repositoryOwner = StringParameter.valueForStringParameter(this, REPOSITORY_OWNER_PARAMETER_NAME);
+    const repositoryName = StringParameter.valueForStringParameter(this, REPOSITORY_NAME_PARAMETER_NAME);
+    const branchName = StringParameter.valueForStringParameter(this, REPOSITORY_BRANCH_PARAMETER_NAME);
+    const gitHubToken = SecretValue.ssmSecure(GITHUB_TOKEN_PARAMETER_NAME);
 
     this.frontendBucket = new Bucket(this, 'FrontendHostingBucket', {
       websiteIndexDocument: 'index.html',
@@ -67,10 +71,10 @@ export class DeploymentStack extends Stack {
       actions: [
         new GitHubSourceAction({
           actionName: 'GitHubSource',
-          owner: props.repositoryOwner,
-          repo: props.repositoryName,
-          branch: props.branchName,
-          oauthToken: SecretValue.secretsManager(props.gitHubTokenSecretName),
+          owner: repositoryOwner,
+          repo: repositoryName,
+          branch: branchName,
+          oauthToken: gitHubToken,
           output: sourceOutput,
           trigger: GitHubTrigger.WEBHOOK
         })

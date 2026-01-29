@@ -63,7 +63,7 @@ The deployment stack provisions the frontend hosting bucket along with a CodePip
 
 Use the CDK outputs for `ApiGatewayUrl`, `ApiGatewayName`, `UserPoolId`, and `UserPoolClientId` to populate the frontend `.env` values listed above.
 Use the `FrontendBucketName` output when deploying the frontend locally from `app/scripts/deploy-frontend.sh`.
-Set the deployment stack configuration via CDK context values (`repositoryOwner`, `repositoryName`, `repositoryBranch`, `gitHubTokenSecretName`) or the environment variables `PIPELINE_REPOSITORY_OWNER`, `PIPELINE_REPOSITORY_NAME`, `PIPELINE_REPOSITORY_BRANCH`, and `PIPELINE_GITHUB_TOKEN_SECRET_NAME`.
+Set the deployment stack configuration via AWS SSM Parameter Store. The parameters `PIPELINE_REPOSITORY_OWNER`, `PIPELINE_REPOSITORY_NAME`, and `PIPELINE_REPOSITORY_BRANCH` should be plain string values. Store `PIPELINE_GITHUB_TOKEN_SECRET_NAME` as a SecureString so the deployment stack can decrypt the token for the GitHub source action.
 
 ## Verification
 
